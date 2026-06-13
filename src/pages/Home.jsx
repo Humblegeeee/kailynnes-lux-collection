@@ -44,8 +44,8 @@ export default function Home() {
           alt="Hero"
           className="absolute inset-0 w-full h-full object-cover opacity-40"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/25 to-transparent" />
-
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/50 to-transparent" />
+        
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-24">
           <p className="section-eyebrow text-gold/90">New Collection 2026</p>
           <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] max-w-2xl mb-6">
