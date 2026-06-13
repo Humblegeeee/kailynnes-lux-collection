@@ -21,7 +21,7 @@ export default function Cart() {
     );
   }
 
-  const deliveryFee = cartTotal >= 500 ? 0 : 30;
+  const deliveryFee = cartTotal >= 800 ? 0 : 30;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -116,9 +116,9 @@ export default function Cart() {
               {deliveryFee === 0 && (
                 <p className="text-xs text-green-600">🎉 You qualify for free delivery!</p>
               )}
-              {cartTotal < 500 && (
+              {cartTotal < 800 && (
                 <p className="text-xs text-muted">
-                  Add GH₵ {(500 - cartTotal).toLocaleString()} more for free delivery
+                  Add GH₵ {(800 - cartTotal).toLocaleString()} more for free delivery
                 </p>
               )}
             </div>

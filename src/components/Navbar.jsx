@@ -30,7 +30,7 @@ export default function Navbar() {
     <>
       {/* Top announcement bar */}
       <div className="bg-espresso text-white text-center text-xs py-2 font-body tracking-widest">
-        FREE DELIVERY ON ORDERS OVER GH₵ 500 &nbsp;·&nbsp; PAY VIA MOMO
+        FREE DELIVERY ON ORDERS OVER GH₵ 800 &nbsp;·&nbsp; PAY VIA MOMO
       </div>
 
       <header className="bg-ivory border-b border-card-border sticky top-0 z-50 shadow-sm">

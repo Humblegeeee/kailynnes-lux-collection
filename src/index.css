@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #1f1a17;
-  --color-espresso: #6b4f3a;
-  --color-espresso-dark: #3f2d22;
+  --color-ink: #3e2c34;
+  --color-espresso: #d18fa1;
+  --color-espresso-dark: #bf7f92;
   --color-gold: #c9a96e;
-  --color-blush: #f6e7df;
-  --color-blush-light: #fdf6f1;
-  --color-ivory: #fdfaf6;
-  --color-muted: #8a7f77;
-  --color-card-border: #eaded7;
+  --color-blush: #ebc7d2;
+  --color-blush-light: #f4dce4;
+  --color-ivory: #fff8fa;
+  --color-muted: #8a6f77;
+  --color-card-border: #ead4dc;
 
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 4px 20px rgba(209, 143, 161, 0.12);
+  --shadow-card-hover: 0 10px 30px rgba(209, 143, 161, 0.22);
 
   --font-display: Georgia, "Times New Roman", serif;
   --font-body: Inter, system-ui, sans-serif;
@@ -20,8 +20,8 @@
 
 body {
   margin: 0;
-  background: #fdfaf6;
-  color: #1f1a17;
+  background: #fff8fa;
+  color: #3e2c34;
   font-family: Inter, system-ui, sans-serif;
 }
 
@@ -48,7 +48,7 @@ h3 {
 }
 
 .input-field {
-  @apply w-full border border-card-border bg-white px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold placeholder:text-muted font-body transition-colors;
+  @apply w-full border border-card-border bg-white px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-espresso focus:ring-1 focus:ring-espresso placeholder:text-muted font-body transition-colors;
 }
 
 .label {
@@ -56,7 +56,7 @@ h3 {
 }
 
 .section-eyebrow {
-  @apply text-xs font-body font-medium tracking-[0.2em] uppercase text-gold mb-3;
+  @apply text-xs font-body font-medium tracking-[0.2em] uppercase text-espresso mb-3;
 }
 
 .card {
@@ -64,7 +64,7 @@ h3 {
 }
 
 .gold-divider {
-  @apply w-12 h-0.5 bg-gold mx-auto my-4;
+  @apply w-12 h-0.5 bg-espresso mx-auto my-4;
 }
 
 .admin-sidebar-link {
@@ -72,7 +72,7 @@ h3 {
 }
 
 .admin-sidebar-link.active {
-  @apply text-white bg-white/15 border-l-2 border-gold;
+  @apply text-white bg-white/15 border-l-2 border-espresso;
 }
 
 html {
@@ -84,37 +84,17 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #fdfaf6;
+  background: #fff8fa;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c9a96e;
+  background: #d18fa1;
   border-radius: 3px;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-
-  100% {
-    background-position: 200% center;
-  }
-}
-
 .hero-title-underline {
-  background: linear-gradient(
-    90deg,
-    #c9a96e 0%,
-    #e8d5b0 40%,
-    #c9a96e 60%,
-    #6b4f3a 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 4s linear infinite;
+  color: #e8b6c2;
+  font-style: italic;
 }
 
 .product-card-wrap:hover .gold-corner {
