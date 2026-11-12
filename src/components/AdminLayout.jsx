@@ -6,7 +6,7 @@ export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-stone-100">
+    <div className="flex min-h-screen bg-blush-light">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <AdminSidebar />
@@ -19,7 +19,7 @@ export default function AdminLayout({ children }) {
           style={{ background: 'rgba(0,0,0,0.5)' }}
           onClick={() => setSidebarOpen(false)}
         >
-          <div onClick={e => e.stopPropagation()} className="w-64">
+          <div onClick={e => e.stopPropagation()} className="drop-panel w-64">
             <AdminSidebar onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }) {
           <span className="font-display text-white font-semibold">Kailynne's Admin</span>
         </div>
 
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="page-enter flex-1 p-6 lg:p-8">
           {children}
         </main>
       </div>

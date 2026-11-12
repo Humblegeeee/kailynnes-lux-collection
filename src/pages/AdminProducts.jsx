@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PlusCircle, Edit2, Trash2, Search } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import AdminLayout from '../components/AdminLayout';
+import SmartImage from '../components/SmartImage';
 
 export default function AdminProducts() {
   const { products, deleteProduct, updateProduct } = useStore();
@@ -24,7 +25,7 @@ export default function AdminProducts() {
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
           <p className="text-xs font-body tracking-[0.18em] text-muted uppercase mb-1">Inventory</p>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">Products</h1>
+          <h1 className="font-display text-4xl sm:text-5xl font-medium text-ink">Products</h1>
         </div>
         <Link to="/admin/add-product" className="btn-primary flex items-center gap-2">
           <PlusCircle size={16} />
@@ -63,10 +64,10 @@ export default function AdminProducts() {
                 <tr key={product.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <img
+                      <SmartImage
                         src={product.photos?.[0]}
                         alt={product.name}
-                        className="w-10 h-10 object-cover rounded-sm bg-blush-light flex-shrink-0"
+                        className="w-10 h-10 object-cover bg-blush-light flex-shrink-0"
                       />
                       <span className="font-medium text-ink line-clamp-1">{product.name}</span>
                     </div>
@@ -138,14 +139,14 @@ export default function AdminProducts() {
           style={{ background: 'rgba(0,0,0,0.5)' }}
           onClick={() => setConfirmDelete(null)}
         >
-          <div className="bg-white rounded-sm shadow-2xl p-8 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <h3 className="font-display text-lg font-semibold text-ink mb-2">Delete Product?</h3>
+          <div className="bg-white shadow-2xl p-8 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="font-display text-2xl font-medium text-ink mb-2">Delete Product?</h3>
             <p className="text-sm text-muted font-body mb-6">This action cannot be undone.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1">Cancel</button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
-                className="flex-1 bg-red-500 text-white font-body font-medium py-3 rounded-sm hover:bg-red-600 transition-colors text-sm"
+                className="flex-1 bg-red-500 text-white font-body font-medium py-3 hover:bg-red-600 transition-colors text-sm"
               >
                 Delete
               </button>

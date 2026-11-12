@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Package, ShoppingBag, AlertTriangle, XCircle, Bell, TrendingUp } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import AdminLayout from '../components/AdminLayout';
+import SmartImage from '../components/SmartImage';
 
 export default function AdminDashboard() {
   const { products, orders, notifyRequests } = useStore();
@@ -48,16 +49,16 @@ export default function AdminDashboard() {
       label: 'Notify Requests',
       value: notifyRequests.length,
       icon: Bell,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
+      color: 'text-gold-deep',
+      bg: 'bg-gold/10',
       to: '/admin/notify-requests',
     },
     {
       label: 'Pending Orders',
       value: pendingOrders.length,
       icon: TrendingUp,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
+      color: 'text-ink',
+      bg: 'bg-ink/5',
       to: '/admin/orders',
     },
   ];
@@ -66,7 +67,7 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="mb-8">
         <p className="text-xs font-body tracking-[0.18em] text-muted uppercase mb-1">Welcome Back</p>
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">Dashboard</h1>
+        <h1 className="font-display text-4xl sm:text-5xl font-medium text-ink">Dashboard</h1>
       </div>
 
       {/* Stats grid */}
@@ -74,10 +75,10 @@ export default function AdminDashboard() {
         {stats.map(({ label, value, icon: Icon, color, bg, to }) => (
           <Link key={label} to={to} className="card bg-white p-5 hover:shadow-card-hover transition-all">
             <div className="flex items-start justify-between mb-3">
-              <div className={`${bg} ${color} p-2 rounded-sm`}>
+              <div className={`${bg} ${color} p-2`}>
                 <Icon size={18} />
               </div>
-              <span className="font-display text-2xl font-bold text-ink">{value}</span>
+              <span className="font-display text-4xl font-medium text-ink">{value}</span>
             </div>
             <p className="text-xs font-body text-muted">{label}</p>
           </Link>
@@ -88,8 +89,8 @@ export default function AdminDashboard() {
         {/* Recent Orders */}
         <div className="card bg-white p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-display text-lg font-semibold text-ink">Recent Orders</h2>
-            <Link to="/admin/orders" className="text-xs font-body text-gold hover:underline">View all</Link>
+            <h2 className="font-display text-2xl font-medium text-ink">Recent Orders</h2>
+            <Link to="/admin/orders" className="text-xs font-body text-gold-deep hover:underline">View all</Link>
           </div>
           {orders.length === 0 ? (
             <p className="text-sm text-muted font-body py-4">No orders yet.</p>
@@ -111,8 +112,8 @@ export default function AdminDashboard() {
         {/* Low stock */}
         <div className="card bg-white p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-display text-lg font-semibold text-ink">Stock Alerts</h2>
-            <Link to="/admin/products" className="text-xs font-body text-gold hover:underline">Manage</Link>
+            <h2 className="font-display text-2xl font-medium text-ink">Stock Alerts</h2>
+            <Link to="/admin/products" className="text-xs font-body text-gold-deep hover:underline">Manage</Link>
           </div>
           {lowStock.length === 0 && outOfStock.length === 0 ? (
             <p className="text-sm text-muted font-body py-4">All products are well stocked.</p>
@@ -121,10 +122,10 @@ export default function AdminDashboard() {
               {[...outOfStock, ...lowStock].slice(0, 6).map(product => (
                 <div key={product.id} className="flex items-center justify-between text-sm border-b border-stone-50 pb-3 last:border-0 last:pb-0">
                   <div className="flex items-center gap-2">
-                    <img
+                    <SmartImage
                       src={product.photos?.[0]}
                       alt={product.name}
-                      className="w-8 h-8 object-cover rounded-sm bg-blush-light"
+                      className="w-8 h-8 object-cover bg-blush-light"
                     />
                     <div>
                       <p className="font-body font-medium text-ink line-clamp-1">{product.name}</p>

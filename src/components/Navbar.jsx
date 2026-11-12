@@ -1,109 +1,165 @@
-import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Menu, X, Search } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { BRAND, BRAND_SUB, FREE_DELIVERY_THRESHOLD } from '../lib/constants';
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/bags', label: 'Bags' },
+  { to: '/clothes', label: 'Clothes' },
+  { to: '/products', label: 'Shop All', end: true },
+];
 
 export default function Navbar() {
   const { cartCount } = useCart();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { pathname } = useLocation();
   const navigate = useNavigate();
+
+  // Remember which page each panel was opened on, so it closes itself on navigation.
+  const [menuPath, setMenuPath] = useState(null);
+  const [searchPath, setSearchPath] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+
+  const menuOpen = menuPath === pathname;
+  const searchOpen = searchPath === pathname;
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [menuOpen]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
-      setSearchQuery('');
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
+    navigate(`/products?search=${encodeURIComponent(query)}`);
+    setSearchPath(null);
+    setSearchQuery('');
   };
 
-  const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/products', label: 'Shop All' },
-    { to: '/products?category=Corporate+Bags', label: 'Corporate' },
-    { to: '/products?category=Girlie+Bags', label: 'Girlie' },
-  ];
+  const toggleMenu = () => {
+    setSearchPath(null);
+    setMenuPath(menuOpen ? null : pathname);
+  };
+
+  const toggleSearch = () => {
+    setMenuPath(null);
+    setSearchPath(searchOpen ? null : pathname);
+  };
 
   return (
     <>
-      {/* Top announcement bar */}
-      <div className="bg-espresso text-white text-center text-xs py-2 font-body tracking-widest">
-        FREE DELIVERY ON ORDERS OVER GH₵ 800 &nbsp;·&nbsp; PAY VIA MOMO
+      {/* Announcement bar */}
+      <div className="bg-noir text-gold-light text-center text-[10px] sm:text-[11px] py-2.5 px-4 font-body tracking-[0.28em] uppercase">
+        Free delivery on orders over GH₵ {FREE_DELIVERY_THRESHOLD}
+        <span className="mx-3 text-gold">✦</span>
+        Pay via MoMo
       </div>
 
-      <header className="bg-ivory border-b border-card-border sticky top-0 z-50 shadow-sm">
+      <header
+        className="site-header sticky top-0 z-50 border-b border-card-border bg-ivory/90 backdrop-blur-md"
+        data-scrolled={scrolled || undefined}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex flex-col leading-none">
-              <span className="font-display text-xl font-bold text-ink tracking-tight">Kailynne's</span>
-              <span className="text-[9px] font-body tracking-[0.3em] text-gold uppercase">LUX COLLECTION</span>
-            </Link>
-
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map(link => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `text-sm font-body font-medium tracking-wide transition-colors duration-150 ${
-                      isActive
-                        ? 'text-espresso border-b border-gold pb-0.5'
-                        : 'text-ink hover:text-espresso'
-                    }`
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
-            </nav>
-
-            {/* Right icons */}
-            <div className="flex items-center gap-4">
+          <div className="site-header-bar grid grid-cols-[1fr_auto_1fr] items-center">
+            {/* Left: desktop nav / mobile menu toggle */}
+            <div className="flex items-center">
               <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="text-ink hover:text-gold transition-colors"
-                aria-label="Search"
+                type="button"
+                className="md:hidden -ml-1 p-1 text-ink hover:text-gold-deep transition-colors"
+                onClick={toggleMenu}
+                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={menuOpen}
               >
-                <Search size={20} />
+                {menuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
               </button>
 
-              <Link to="/cart" className="relative text-ink hover:text-gold transition-colors">
-                <ShoppingBag size={22} />
+              <nav className="hidden md:flex items-center gap-8 lg:gap-10">
+                {NAV_LINKS.map(link => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.end}
+                    className={({ isActive }) =>
+                      `nav-link text-[11px] font-body font-medium uppercase tracking-[0.22em] transition-colors duration-300 ${
+                        isActive ? 'is-active text-ink' : 'text-ink/70 hover:text-ink'
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+
+            {/* Centre: wordmark */}
+            <Link to="/" className="flex flex-col items-center leading-none text-center" aria-label={`${BRAND} ${BRAND_SUB} — home`}>
+              <span className="font-display text-[26px] sm:text-[30px] font-medium text-ink tracking-tight">{BRAND}</span>
+              <span className="mt-1 pl-[0.42em] text-[8px] sm:text-[9px] font-body tracking-[0.42em] text-gold-deep uppercase">
+                {BRAND_SUB}
+              </span>
+            </Link>
+
+            {/* Right: icons */}
+            <div className="flex items-center justify-end gap-4 sm:gap-5">
+              <button
+                type="button"
+                onClick={toggleSearch}
+                className="p-1 text-ink hover:text-gold-deep transition-colors"
+                aria-label="Search"
+                aria-expanded={searchOpen}
+              >
+                {searchOpen ? <X size={20} strokeWidth={1.5} /> : <Search size={20} strokeWidth={1.5} />}
+              </button>
+
+              <Link
+                to="/cart"
+                className="relative p-1 text-ink hover:text-gold-deep transition-colors"
+                aria-label={`Your bag, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+              >
+                <ShoppingBag size={21} strokeWidth={1.5} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-espresso text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-body">
+                  <span
+                    key={cartCount}
+                    className="cart-bump absolute -top-1 -right-1.5 bg-gold text-ink text-[9px] font-semibold min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-body"
+                  >
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
               </Link>
-
-              {/* Mobile menu toggle */}
-              <button
-                className="md:hidden text-ink hover:text-gold transition-colors"
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Menu"
-              >
-                {menuOpen ? <X size={22} /> : <Menu size={22} />}
-              </button>
             </div>
           </div>
 
           {/* Search bar */}
           {searchOpen && (
-            <form onSubmit={handleSearch} className="pb-4">
-              <div className="flex gap-2">
+            <form onSubmit={handleSearch} className="drop-panel pb-5" role="search">
+              <div className="flex items-end gap-4 border-b border-ink/30 focus-within:border-gold transition-colors">
+                <Search size={18} strokeWidth={1.5} className="mb-3 text-muted flex-shrink-0" />
                 <input
-                  type="text"
+                  type="search"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search bags..."
-                  className="input-field"
+                  placeholder="Search bags and clothes…"
+                  className="flex-1 min-w-0 bg-transparent py-2 font-display text-2xl text-ink placeholder:text-muted/60 focus:outline-none"
                   autoFocus
                 />
-                <button type="submit" className="btn-primary px-4">
+                <button
+                  type="submit"
+                  className="mb-2.5 text-[11px] font-body font-medium uppercase tracking-[0.22em] text-ink hover:text-gold-deep transition-colors"
+                >
                   Search
                 </button>
               </div>
@@ -113,17 +169,28 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-ivory border-t border-card-border px-4 pb-4">
-            {navLinks.map(link => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                onClick={() => setMenuOpen(false)}
-                className="block py-3 text-sm font-body font-medium text-ink hover:text-espresso border-b border-card-border last:border-0"
-              >
-                {link.label}
-              </NavLink>
-            ))}
+          <div className="drop-panel md:hidden absolute inset-x-0 top-full h-dvh overflow-y-auto bg-ivory border-t border-card-border px-6 pt-8 pb-10">
+            <nav className="flex flex-col">
+              {NAV_LINKS.map((link, i) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  style={{ '--i': i }}
+                  className={({ isActive }) =>
+                    `menu-item flex items-baseline justify-between border-b border-card-border py-5 font-display text-4xl ${
+                      isActive ? 'text-gold-deep italic' : 'text-ink'
+                    }`
+                  }
+                >
+                  {link.label}
+                  <span className="font-body text-[10px] tracking-[0.3em] text-muted not-italic">0{i + 1}</span>
+                </NavLink>
+              ))}
+            </nav>
+            <p className="menu-item mt-10 text-[10px] font-body uppercase tracking-[0.3em] text-muted" style={{ '--i': NAV_LINKS.length }}>
+              Curated in Accra
+            </p>
           </div>
         )}
       </header>

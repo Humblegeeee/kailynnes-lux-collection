@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import AdminLayout from '../components/AdminLayout';
-import { CATEGORIES } from '../data/sampleProducts';
+import { BAG_CATEGORIES, CLOTHING_CATEGORIES, SIZE_OPTIONS, departmentOf } from '../data/sampleProducts';
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -16,6 +16,7 @@ export default function EditProduct() {
     price: String(product.price),
     quantityInStock: String(product.quantityInStock),
     photos: product.photos?.length > 0 ? product.photos : [''],
+    sizes: product.sizes || [],
   } : null);
   const [errors, setErrors] = useState({});
 
@@ -50,12 +51,21 @@ export default function EditProduct() {
     set('photos', photos.length > 0 ? photos : ['']);
   };
 
+  const isClothing = departmentOf(form.category) === 'clothes';
+
+  const toggleSize = (size) => {
+    const next = form.sizes.includes(size)
+      ? form.sizes.filter(s => s !== size)
+      : SIZE_OPTIONS.filter(s => s === size || form.sizes.includes(s));
+    set('sizes', next);
+  };
+
   const validate = () => {
     const e = {};
     if (!form.name.trim()) e.name = 'Name is required';
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) e.price = 'Valid price is required';
-    if (form.quantityInStock === '' || isNaN(form.quantityInStock) || Number(form.quantityInStock) < 0) {
-      e.quantityInStock = 'Valid quantity is required';
+    if (form.quantityInStock === '' || !Number.isInteger(Number(form.quantityInStock)) || Number(form.quantityInStock) < 0) {
+      e.quantityInStock = 'Enter a whole number, 0 or more';
     }
     if (!form.description.trim()) e.description = 'Description is required';
     return e;
@@ -70,7 +80,8 @@ export default function EditProduct() {
       ...form,
       price: Number(form.price),
       quantityInStock: Number(form.quantityInStock),
-      photos: form.photos.filter(p => p.trim()),
+      photos: form.photos.map(p => p.trim()).filter(Boolean),
+      sizes: isClothing ? form.sizes : [],
     });
     navigate('/admin/products');
   };
@@ -83,7 +94,7 @@ export default function EditProduct() {
         </Link>
         <div>
           <p className="text-xs font-body tracking-[0.18em] text-muted uppercase mb-0.5">Editing</p>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">{product.name}</h1>
+          <h1 className="font-display text-4xl sm:text-5xl font-medium text-ink">{product.name}</h1>
         </div>
       </div>
 
@@ -91,7 +102,7 @@ export default function EditProduct() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="card bg-white p-6 space-y-4">
-              <h2 className="font-display text-lg font-semibold text-ink">Product Details</h2>
+              <h2 className="font-display text-2xl font-medium text-ink">Product Details</h2>
 
               <div>
                 <label className="label">Product Name <span className="text-red-400">*</span></label>
@@ -120,7 +131,7 @@ export default function EditProduct() {
             </div>
 
             <div className="card bg-white p-6">
-              <h2 className="font-display text-lg font-semibold text-ink mb-4">Photo URLs</h2>
+              <h2 className="font-display text-2xl font-medium text-ink mb-4">Photo URLs</h2>
               <div className="space-y-3">
                 {form.photos.map((photo, i) => (
                   <div key={i} className="flex gap-2 items-center">
@@ -141,7 +152,7 @@ export default function EditProduct() {
               {form.photos[0] && (
                 <div className="mt-4">
                   <p className="text-xs text-muted font-body mb-2">Preview:</p>
-                  <img src={form.photos[0]} alt="Preview" className="w-32 h-32 object-cover rounded-sm bg-blush-light" onError={e => { e.target.style.display = 'none'; }} />
+                  <img src={form.photos[0]} alt="Preview" className="w-32 h-32 object-cover bg-blush-light" onError={e => { e.target.style.display = 'none'; }} />
                 </div>
               )}
             </div>
@@ -149,14 +160,41 @@ export default function EditProduct() {
 
           <div className="space-y-6">
             <div className="card bg-white p-6 space-y-4">
-              <h2 className="font-display text-lg font-semibold text-ink">Category & Status</h2>
+              <h2 className="font-display text-2xl font-medium text-ink">Category & Status</h2>
 
               <div>
                 <label className="label">Category</label>
                 <select value={form.category} onChange={e => set('category', e.target.value)} className="input-field">
-                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  <optgroup label="Bags">
+                    {BAG_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </optgroup>
+                  <optgroup label="Clothes">
+                    {CLOTHING_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </optgroup>
                 </select>
               </div>
+
+              {isClothing && (
+                <div>
+                  <span className="label">Sizes Available</span>
+                  <div className="flex flex-wrap gap-2">
+                    {SIZE_OPTIONS.map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        className="size-chip"
+                        aria-pressed={form.sizes.includes(size)}
+                        onClick={() => toggleSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted font-body mt-2">
+                    Customers choose one of these before adding to their bag. Leave all off for one-size pieces.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="label">Status</label>
@@ -169,7 +207,7 @@ export default function EditProduct() {
 
             <div className="flex flex-col gap-3">
               <button type="submit" className="btn-primary w-full">Save Changes</button>
-              <Link to="/admin/products" className="btn-secondary w-full text-center">Cancel</Link>
+              <Link to="/admin/products" className="btn-secondary w-full">Cancel</Link>
             </div>
           </div>
         </div>

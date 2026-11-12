@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { X, BellRing, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X, BellRing } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import SuccessTick from './SuccessTick';
 
 export default function NotifyModal({ product, onClose }) {
   const { addNotifyRequest } = useStore();
@@ -9,10 +11,25 @@ export default function NotifyModal({ product, onClose }) {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Close on Escape and keep the page behind from scrolling.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [onClose]);
+
   const validate = () => {
     const e = {};
     if (!name.trim()) e.name = 'Your name is required';
     if (!phone.trim()) e.phone = 'Phone number is required';
+    else if (phone.replace(/\D/g, '').length < 9) e.phone = 'Enter a valid phone number';
     return e;
   };
 
@@ -24,65 +41,72 @@ export default function NotifyModal({ product, onClose }) {
     setSubmitted(true);
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(26,26,26,0.5)' }}
+      className="modal-backdrop fixed inset-0 z-[120] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-ivory rounded-sm shadow-2xl w-full max-w-sm p-8 relative"
+        className="modal-panel bg-ivory shadow-2xl w-full max-w-sm p-8 relative border border-gold/30"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Notify me about ${product.name}`}
         onClick={e => e.stopPropagation()}
       >
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-muted hover:text-ink transition-colors"
+          aria-label="Close"
         >
-          <X size={18} />
+          <X size={18} strokeWidth={1.5} />
         </button>
 
         {submitted ? (
           <div className="text-center py-4">
-            <CheckCircle className="mx-auto mb-4 text-gold" size={44} />
-            <h3 className="font-display text-xl font-semibold text-ink mb-2">You're on the list!</h3>
+            <SuccessTick size={64} className="mx-auto mb-5" />
+            <h3 className="font-display text-3xl font-medium text-ink mb-2">You're on the list</h3>
             <p className="text-sm text-muted font-body leading-relaxed">
-              We'll contact you on <strong>{phone}</strong> as soon as <em>{product.name}</em> is back in stock.
+              We'll contact you on <strong className="text-ink">{phone}</strong> as soon as <em>{product.name}</em> is back in stock.
             </p>
-            <button onClick={onClose} className="btn-primary mt-6 w-full">Done</button>
+            <button type="button" onClick={onClose} className="btn-primary mt-7 w-full">Done</button>
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              <BellRing size={16} className="text-gold" />
+            <div className="flex items-center gap-2 mb-2">
+              <BellRing size={14} strokeWidth={1.5} className="text-gold-deep" />
               <span className="section-eyebrow !mb-0">Notify Me</span>
             </div>
-            <h3 className="font-display text-xl font-semibold text-ink mb-1">{product.name}</h3>
-            <p className="text-sm text-muted font-body mb-6">
-              This item is currently out of stock. Leave your details and we'll let you know when it's available.
+            <h3 className="font-display text-3xl font-medium text-ink mb-2 leading-tight">{product.name}</h3>
+            <p className="text-sm text-muted font-body mb-6 leading-relaxed">
+              This piece is currently out of stock. Leave your details and we'll let you know when it's available.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
-                <label className="label">Your Name</label>
+                <label className="label" htmlFor="notify-name">Your Name</label>
                 <input
+                  id="notify-name"
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="input-field"
                   placeholder="e.g. Abena Mensah"
+                  autoFocus
                 />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-red-600 text-xs mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label className="label">Phone Number</label>
+                <label className="label" htmlFor="notify-phone">Phone Number</label>
                 <input
+                  id="notify-phone"
                   type="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   className="input-field"
                   placeholder="e.g. 024 000 0000"
                 />
-                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
               </div>
               <button type="submit" className="btn-primary w-full mt-2">
                 Notify Me When Available
@@ -91,6 +115,7 @@ export default function NotifyModal({ product, onClose }) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Truck, MapPin, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Truck, MapPin } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
+import { FALLBACK_IMAGE, deliveryFeeFor, formatPrice } from '../lib/constants';
+import SmartImage from '../components/SmartImage';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -21,7 +23,8 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  const deliveryFee = cartTotal >= 500 ? 0 : 30;
+  // Same rule as the cart page and the announcement bar (free over GH₵ 800).
+  const deliveryFee = deliveryFeeFor(cartTotal);
 
   const set = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -32,6 +35,7 @@ export default function Checkout() {
     const e = {};
     if (!form.name.trim()) e.name = 'Full name is required';
     if (!form.phone.trim()) e.phone = 'Phone number is required';
+    else if (form.phone.replace(/\D/g, '').length < 9) e.phone = 'Enter a valid phone number';
     if (!form.email.trim()) e.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email';
     if (form.deliveryMethod === 'delivery' && !form.address.trim()) {
@@ -40,10 +44,16 @@ export default function Checkout() {
     return e;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    if (submitting) return;
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      // Bring the first problem into view instead of failing silently off-screen.
+      document.getElementById(`checkout-${Object.keys(errs)[0]}`)?.focus();
+      return;
+    }
 
     setSubmitting(true);
     const order = placeOrder(form, cartItems, cartTotal + deliveryFee);
@@ -51,69 +61,77 @@ export default function Checkout() {
     navigate('/order-success', { state: { order } });
   };
 
-  if (cartItems.length === 0) {
+  // After a successful order the cart is cleared while we navigate away,
+  // so only show the empty state when no order is being placed.
+  if (cartItems.length === 0 && !submitting) {
     return (
-      <div className="text-center py-24">
-        <h2 className="font-display text-2xl text-ink mb-4">Your cart is empty</h2>
+      <div className="text-center py-28 px-4">
+        <div className="gold-rule mb-6" aria-hidden="true">✦</div>
+        <h2 className="font-display text-4xl font-medium text-ink mb-6">Your bag is empty</h2>
         <Link to="/products" className="btn-primary">Shop Now</Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-8">
-        <p className="section-eyebrow">Almost There</p>
-        <h1 className="font-display text-3xl font-bold text-ink">Checkout</h1>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <div className="mb-10">
+        <p className="fade-rise section-eyebrow">Almost There</p>
+        <h1 className="font-display text-5xl sm:text-6xl font-medium text-ink">
+          <span className="line-mask"><span className="line-rise" style={{ '--d': '100ms' }}>Checkout</span></span>
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Form */}
           <div className="lg:col-span-2 space-y-8">
             {/* Contact info */}
-            <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-ink mb-5">Contact Information</h2>
+            <div className="row-in card p-6 sm:p-8" style={{ '--i': 1 }}>
+              <h2 className="font-display text-2xl font-medium text-ink mb-5">Contact Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Full Name <span className="text-red-400">*</span></label>
+                  <label className="label">Full Name <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     value={form.name}
+                    id="checkout-name"
                     onChange={e => set('name', e.target.value)}
                     className="input-field"
                     placeholder="e.g. Abena Mensah"
                   />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                  {errors.name && <p className="text-red-600 text-xs mt-1">{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="label">Phone Number <span className="text-red-400">*</span></label>
+                  <label className="label">Phone Number <span className="text-red-600">*</span></label>
                   <input
                     type="tel"
                     value={form.phone}
+                    id="checkout-phone"
                     onChange={e => set('phone', e.target.value)}
                     className="input-field"
                     placeholder="e.g. 024 000 0000"
                   />
-                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="label">Email Address <span className="text-red-400">*</span></label>
+                  <label className="label">Email Address <span className="text-red-600">*</span></label>
                   <input
                     type="email"
                     value={form.email}
+                    id="checkout-email"
                     onChange={e => set('email', e.target.value)}
                     className="input-field"
                     placeholder="e.g. abena@email.com"
                   />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                  {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
                 </div>
               </div>
             </div>
 
             {/* Delivery method */}
-            <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-ink mb-5">Delivery Method</h2>
+            <div className="row-in card p-6 sm:p-8" style={{ '--i': 2 }}>
+              <h2 className="font-display text-2xl font-medium text-ink mb-5">Delivery Method</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 {[
                   { value: 'delivery', label: 'Home Delivery', icon: Truck, desc: 'Delivered to your door' },
@@ -121,7 +139,7 @@ export default function Checkout() {
                 ].map(({ value, label, icon: Icon, desc }) => (
                   <label
                     key={value}
-                    className={`flex items-start gap-3 p-4 border rounded-sm cursor-pointer transition-all ${
+                    className={`flex items-start gap-3 p-4 border cursor-pointer transition-all ${
                       form.deliveryMethod === value
                         ? 'border-gold bg-gold/5'
                         : 'border-card-border hover:border-gold/40'
@@ -148,15 +166,16 @@ export default function Checkout() {
 
               {form.deliveryMethod === 'delivery' ? (
                 <div>
-                  <label className="label">Delivery Address <span className="text-red-400">*</span></label>
+                  <label className="label">Delivery Address <span className="text-red-600">*</span></label>
                   <textarea
                     value={form.address}
+                    id="checkout-address"
                     onChange={e => set('address', e.target.value)}
                     className="input-field resize-none"
                     rows={3}
                     placeholder="Street name, area, landmark, city"
                   />
-                  {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                  {errors.address && <p className="text-red-600 text-xs mt-1">{errors.address}</p>}
                 </div>
               ) : (
                 <div>
@@ -173,8 +192,8 @@ export default function Checkout() {
             </div>
 
             {/* Order note */}
-            <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-ink mb-2">Order Note</h2>
+            <div className="row-in card p-6 sm:p-8" style={{ '--i': 3 }}>
+              <h2 className="font-display text-2xl font-medium text-ink mb-2">Order Note</h2>
               <p className="text-xs text-muted font-body mb-4">Optional — any special requests or notes</p>
               <textarea
                 value={form.orderNote}
@@ -188,24 +207,28 @@ export default function Checkout() {
 
           {/* Order summary */}
           <div className="lg:col-span-1">
-            <div className="card p-6 sticky top-24">
-              <h2 className="font-display text-xl font-semibold text-ink mb-5">Order Summary</h2>
+            <div className="fade-rise card p-7 sticky top-24" style={{ '--d': '300ms' }}>
+              <h2 className="font-display text-3xl font-medium text-ink mb-6">Order Summary</h2>
 
               {/* Items */}
               <div className="space-y-3 mb-5">
                 {cartItems.map(item => (
-                  <div key={item.id} className="flex gap-3">
-                    <img
-                      src={item.photos?.[0]}
-                      alt={item.name}
-                      className="w-12 h-12 object-cover rounded-sm bg-blush-light flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-body font-medium text-ink line-clamp-1">{item.name}</p>
-                      <p className="text-xs text-muted font-body">Qty: {item.quantity}</p>
+                  <div key={item.lineId} className="flex gap-3">
+                    <div className="w-12 h-14 flex-shrink-0 overflow-hidden bg-blush-light" style={{ containerType: 'inline-size' }}>
+                      <SmartImage
+                        src={item.photos?.[0] || FALLBACK_IMAGE}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <p className="text-xs font-body font-semibold text-ink whitespace-nowrap">
-                      GH₵ {(item.price * item.quantity).toLocaleString()}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-body font-medium text-ink line-clamp-1">{item.name}</p>
+                      <p className="text-xs text-muted font-body">
+                        Qty: {item.quantity}{item.size ? ` · Size ${item.size}` : ''}
+                      </p>
+                    </div>
+                    <p className="text-sm font-body text-ink whitespace-nowrap">
+                      {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
                 ))}
@@ -214,27 +237,27 @@ export default function Checkout() {
               <div className="border-t border-card-border pt-4 space-y-2 text-sm font-body mb-5">
                 <div className="flex justify-between text-muted">
                   <span>Subtotal</span>
-                  <span>GH₵ {cartTotal.toLocaleString()}</span>
+                  <span>{formatPrice(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-muted">
                   <span>Delivery</span>
-                  <span className={deliveryFee === 0 ? 'text-green-600' : ''}>
-                    {deliveryFee === 0 ? 'FREE' : `GH₵ ${deliveryFee}`}
+                  <span className={deliveryFee === 0 ? 'text-gold-deep font-medium uppercase tracking-[0.14em] text-xs' : ''}>
+                    {deliveryFee === 0 ? 'Free' : formatPrice(deliveryFee)}
                   </span>
                 </div>
               </div>
 
-              <div className="border-t border-card-border pt-4 flex justify-between font-body font-semibold text-ink mb-6">
-                <span>Total</span>
-                <span className="font-display text-xl text-espresso">
-                  GH₵ {(cartTotal + deliveryFee).toLocaleString()}
+              <div className="border-t border-card-border pt-5 flex justify-between items-baseline font-body text-ink mb-7">
+                <span className="text-[11px] uppercase tracking-[0.2em] font-medium">Total</span>
+                <span className="font-display text-3xl">
+                  {formatPrice(cartTotal + deliveryFee)}
                 </span>
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="btn-primary w-full flex items-center justify-center gap-2"
+                className="btn-primary w-full"
               >
                 {submitting ? 'Placing Order...' : 'Place Order'}
               </button>

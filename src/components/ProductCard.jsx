@@ -1,112 +1,111 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, BellRing, Eye } from 'lucide-react';
+import { ShoppingBag, BellRing, Check, Ruler } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useStore } from '../context/StoreContext';
+import { formatPrice } from '../lib/constants';
 import NotifyModal from './NotifyModal';
+import SmartImage from './SmartImage';
 
 export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
+  const { addToCart, quantityInCart } = useCart();
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [added, setAdded] = useState(false);
+  const [altBroken, setAltBroken] = useState(false);
 
   const isOutOfStock = product.quantityInStock === 0;
   const isLowStock = product.quantityInStock > 0 && product.quantityInStock <= 3;
+  const hasSizes = product.sizes?.length > 0;
+  const atLimit = !isOutOfStock && quantityInCart(product.id) >= product.quantityInStock;
+  const href = `/products/${product.id}`;
+  const altPhoto = !altBroken && product.photos?.[1];
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAddToCart = () => {
     addToCart(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
 
+  const actionClass =
+    'flex w-full items-center justify-center gap-2 bg-ivory/95 backdrop-blur-sm py-3 text-[10px] font-body font-medium uppercase tracking-[0.22em] text-ink shadow-lg transition-colors duration-300 hover:bg-ink hover:text-ivory disabled:hover:bg-ivory/95 disabled:hover:text-ink disabled:opacity-70';
+
   return (
     <>
-      <div className="product-card-wrap group relative">
-        <Link to={`/products/${product.id}`} className="block">
-          <div className="card overflow-hidden">
-            {/* Image */}
-            <div className="relative overflow-hidden bg-blush-light aspect-[4/5]">
+      <article className="pcard group relative">
+        <div className="pcard-media">
+          <Link to={href} className="block h-full" aria-label={product.name}>
+            <SmartImage
+              src={product.photos?.[0]}
+              alt={product.name}
+              label={product.category}
+              className="pcard-img"
+              loading="lazy"
+            />
+            {altPhoto && (
               <img
-                src={product.photos?.[0] || 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600&q=80'}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                src={altPhoto}
+                alt=""
+                className="pcard-img-alt"
                 loading="lazy"
+                onError={() => setAltBroken(true)}
               />
+            )}
+          </Link>
 
-              {/* Badges */}
-              <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                {isOutOfStock && (
-                  <span className="bg-ink/80 text-white text-[10px] font-body font-medium px-2.5 py-1 tracking-widest uppercase">
-                    Out of Stock
-                  </span>
-                )}
-                {isLowStock && (
-                  <span className="bg-gold text-white text-[10px] font-body font-medium px-2.5 py-1 tracking-widest uppercase">
-                    Only {product.quantityInStock} left
-                  </span>
-                )}
-              </div>
-
-              {/* Quick view overlay */}
-              <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors duration-300 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100">
-                <span className="flex items-center gap-1.5 bg-white text-ink text-xs font-body font-medium px-4 py-2 tracking-wide">
-                  <Eye size={13} />
-                  View Details
-                </span>
-              </div>
-
-              {/* Gold corner accent */}
-              <div className="gold-corner absolute top-0 right-0 w-0 h-0
-                border-l-[28px] border-l-transparent
-                border-t-[28px] border-t-gold/60">
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-4">
-              <p className="text-[10px] font-body tracking-[0.18em] text-gold uppercase mb-1">
-                {product.category}
-              </p>
-              <h3 className="font-display text-base font-semibold text-ink leading-snug mb-1.5 line-clamp-1">
-                {product.name}
-              </h3>
-              <p className="text-sm text-muted font-body line-clamp-2 mb-3 leading-relaxed">
-                {product.description}
-              </p>
-
-              <div className="flex items-center justify-between">
-                <span className="font-display text-lg font-bold text-espresso">
-                  GH₵ {product.price.toLocaleString()}
-                </span>
-
-                {isOutOfStock ? (
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNotifyOpen(true); }}
-                    className="flex items-center gap-1.5 text-xs font-body font-medium text-gold border border-gold px-3 py-2 hover:bg-gold hover:text-white transition-all duration-200 rounded-sm"
-                  >
-                    <BellRing size={13} />
-                    Notify Me
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleAddToCart}
-                    className={`flex items-center gap-1.5 text-xs font-body font-medium px-3 py-2 rounded-sm transition-all duration-200 ${
-                      added
-                        ? 'bg-green-100 text-green-700 border border-green-200'
-                        : 'bg-espresso text-white hover:bg-espresso-dark'
-                    }`}
-                  >
-                    <ShoppingBag size={13} />
-                    {added ? 'Added!' : 'Add to Bag'}
-                  </button>
-                )}
-              </div>
-            </div>
+          {/* Badges */}
+          <div className="pointer-events-none absolute top-3 left-3 z-[1] flex flex-col items-start gap-1.5">
+            {isOutOfStock && (
+              <span className="bg-ink/85 text-ivory text-[9px] font-body font-medium px-2.5 py-1.5 tracking-[0.22em] uppercase">
+                Sold Out
+              </span>
+            )}
+            {isLowStock && (
+              <span className="bg-gold text-ink text-[9px] font-body font-medium px-2.5 py-1.5 tracking-[0.22em] uppercase">
+                Only {product.quantityInStock} left
+              </span>
+            )}
           </div>
+
+          {/* Quick action — slides up on hover, always visible on touch screens */}
+          <div className="pcard-action">
+            {isOutOfStock ? (
+              <button type="button" onClick={() => setNotifyOpen(true)} className={actionClass}>
+                <BellRing size={13} strokeWidth={1.5} />
+                Notify Me
+              </button>
+            ) : hasSizes ? (
+              <Link to={href} className={actionClass}>
+                <Ruler size={13} strokeWidth={1.5} />
+                Select Size
+              </Link>
+            ) : (
+              <button type="button" onClick={handleAddToCart} disabled={atLimit && !added} className={actionClass}>
+                {added ? <Check size={13} strokeWidth={2} /> : <ShoppingBag size={13} strokeWidth={1.5} />}
+                {added ? 'Added to Bag' : atLimit ? 'All in Your Bag' : 'Add to Bag'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Info */}
+        <Link to={href} className="block pt-4">
+          <p className="text-[9px] font-body tracking-[0.28em] text-gold-deep uppercase mb-1.5">
+            {product.category}
+          </p>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+            <h3 className="font-display text-[1.35rem] font-medium text-ink leading-tight line-clamp-2 sm:line-clamp-1">
+              <span className="pcard-name">{product.name}</span>
+            </h3>
+            <span className="font-body text-sm text-ink whitespace-nowrap">
+              {formatPrice(product.price)}
+            </span>
+          </div>
+          {hasSizes && (
+            <p className="mt-1.5 text-[10px] font-body tracking-[0.18em] uppercase text-muted">
+              {product.sizes.join(' · ')}
+            </p>
+          )}
         </Link>
-      </div>
+      </article>
 
       {notifyOpen && (
         <NotifyModal

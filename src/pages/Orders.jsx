@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import AdminLayout from '../components/AdminLayout';
 import { StatusBadge } from './AdminDashboard';
+import SmartImage from '../components/SmartImage';
 
 export default function Orders() {
   const { orders, updateOrderStatus, ORDER_STATUSES } = useStore();
@@ -15,7 +16,7 @@ export default function Orders() {
     <AdminLayout>
       <div className="mb-8">
         <p className="text-xs font-body tracking-[0.18em] text-muted uppercase mb-1">Sales</p>
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">Orders</h1>
+        <h1 className="font-display text-4xl sm:text-5xl font-medium text-ink">Orders</h1>
         <p className="text-sm text-muted font-body mt-1">{orders.length} total order{orders.length !== 1 ? 's' : ''}</p>
       </div>
 
@@ -24,7 +25,7 @@ export default function Orders() {
         <button
           onClick={() => setFilter('')}
           className={`px-3 py-1.5 text-xs font-body font-medium rounded-full border transition-all ${
-            !filter ? 'bg-espresso text-white border-espresso' : 'border-card-border text-ink hover:border-gold'
+            !filter ? 'bg-ink text-ivory border-ink' : 'border-card-border text-ink hover:border-gold'
           }`}
         >
           All ({orders.length})
@@ -36,7 +37,7 @@ export default function Orders() {
               key={status}
               onClick={() => setFilter(status)}
               className={`px-3 py-1.5 text-xs font-body font-medium rounded-full border transition-all ${
-                filter === status ? 'bg-espresso text-white border-espresso' : 'border-card-border text-ink hover:border-gold'
+                filter === status ? 'bg-ink text-ivory border-ink' : 'border-card-border text-ink hover:border-gold'
               }`}
             >
               {status} ({count})
@@ -112,11 +113,11 @@ export default function Orders() {
                   <h4 className="text-sm font-body font-medium text-ink mb-3">Items</h4>
                   <div className="space-y-2">
                     {order.items?.map(item => (
-                      <div key={item.id} className="flex items-center gap-3 text-sm font-body">
-                        <img src={item.photos?.[0]} alt={item.name} className="w-10 h-10 object-cover rounded-sm bg-blush-light" />
+                      <div key={item.lineId || item.id} className="flex items-center gap-3 text-sm font-body">
+                        <SmartImage src={item.photos?.[0]} alt={item.name} className="w-10 h-10 object-cover bg-blush-light" />
                         <div className="flex-1">
                           <p className="font-medium text-ink">{item.name}</p>
-                          <p className="text-muted text-xs">Qty: {item.quantity}</p>
+                          <p className="text-muted text-xs">Qty: {item.quantity}{item.size ? ` · Size ${item.size}` : ''}</p>
                         </div>
                         <p className="font-semibold text-espresso">GH₵ {(item.price * item.quantity).toLocaleString()}</p>
                       </div>

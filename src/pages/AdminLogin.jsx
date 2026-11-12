@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -12,10 +12,8 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (isAdminLoggedIn) {
-    navigate('/admin/dashboard');
-    return null;
-  }
+  // Redirect declaratively: calling navigate() while rendering is not allowed.
+  if (isAdminLoggedIn) return <Navigate to="/admin/dashboard" replace />;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,21 +31,21 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-espresso-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-noir flex items-center justify-center p-4">
+      <div className="page-enter w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <span className="font-display text-3xl font-bold text-white">Lumière</span>
-          <p className="text-[10px] font-body tracking-[0.3em] text-gold uppercase mt-1">Admin Panel</p>
+          <span className="font-display text-5xl font-medium text-ivory">Kailynne's</span>
+          <p className="text-[10px] font-body tracking-[0.4em] text-gold uppercase mt-2">Lux Collection · Admin</p>
         </div>
 
-        <div className="bg-ivory rounded-sm shadow-2xl p-8">
-          <h2 className="font-display text-xl font-semibold text-ink mb-6 text-center">
+        <div className="bg-ivory shadow-2xl p-8 border border-gold/30">
+          <h2 className="font-display text-3xl font-medium text-ink mb-6 text-center">
             Sign In
           </h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-body px-4 py-3 rounded-sm mb-5">
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-body px-4 py-3 mb-5">
               {error}
             </div>
           )}
@@ -87,14 +85,14 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
+              className="btn-primary w-full mt-2"
             >
               <LogIn size={16} />
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-6 bg-stone-50 border border-stone-200 rounded-sm p-3">
+          <div className="mt-6 bg-stone-50 border border-stone-200 p-3">
             <p className="text-xs text-muted font-body text-center">
               Demo credentials: <br />
               <strong className="text-ink">admin@bagstore.com</strong> / <strong className="text-ink">admin123</strong>

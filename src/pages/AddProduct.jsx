@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import AdminLayout from '../components/AdminLayout';
-import { CATEGORIES } from '../data/sampleProducts';
+import { BAG_CATEGORIES, CLOTHING_CATEGORIES, SIZE_OPTIONS, departmentOf } from '../data/sampleProducts';
 
 const EMPTY = {
   name: '',
@@ -11,8 +11,9 @@ const EMPTY = {
   quantityInStock: '',
   description: '',
   photos: [''],
-  category: CATEGORIES[0],
+  category: BAG_CATEGORIES[0],
   status: 'active',
+  sizes: [],
 };
 
 export default function AddProduct() {
@@ -41,12 +42,21 @@ export default function AddProduct() {
     set('photos', photos.length > 0 ? photos : ['']);
   };
 
+  const isClothing = departmentOf(form.category) === 'clothes';
+
+  const toggleSize = (size) => {
+    const next = form.sizes.includes(size)
+      ? form.sizes.filter(s => s !== size)
+      : SIZE_OPTIONS.filter(s => s === size || form.sizes.includes(s));
+    set('sizes', next);
+  };
+
   const validate = () => {
     const e = {};
     if (!form.name.trim()) e.name = 'Name is required';
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) e.price = 'Valid price is required';
-    if (form.quantityInStock === '' || isNaN(form.quantityInStock) || Number(form.quantityInStock) < 0) {
-      e.quantityInStock = 'Valid quantity is required';
+    if (form.quantityInStock === '' || !Number.isInteger(Number(form.quantityInStock)) || Number(form.quantityInStock) < 0) {
+      e.quantityInStock = 'Enter a whole number, 0 or more';
     }
     if (!form.description.trim()) e.description = 'Description is required';
     return e;
@@ -61,7 +71,8 @@ export default function AddProduct() {
       ...form,
       price: Number(form.price),
       quantityInStock: Number(form.quantityInStock),
-      photos: form.photos.filter(p => p.trim()),
+      photos: form.photos.map(p => p.trim()).filter(Boolean),
+      sizes: isClothing ? form.sizes : [],
     });
     navigate('/admin/products');
   };
@@ -74,7 +85,7 @@ export default function AddProduct() {
         </Link>
         <div>
           <p className="text-xs font-body tracking-[0.18em] text-muted uppercase mb-0.5">New Item</p>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink">Add Product</h1>
+          <h1 className="font-display text-4xl sm:text-5xl font-medium text-ink">Add Product</h1>
         </div>
       </div>
 
@@ -83,7 +94,7 @@ export default function AddProduct() {
           <div className="lg:col-span-2 space-y-6">
             {/* Basic info */}
             <div className="card bg-white p-6 space-y-4">
-              <h2 className="font-display text-lg font-semibold text-ink">Product Details</h2>
+              <h2 className="font-display text-2xl font-medium text-ink">Product Details</h2>
 
               <div>
                 <label className="label">Product Name <span className="text-red-400">*</span></label>
@@ -93,7 +104,7 @@ export default function AddProduct() {
 
               <div>
                 <label className="label">Description <span className="text-red-400">*</span></label>
-                <textarea value={form.description} onChange={e => set('description', e.target.value)} className="input-field resize-none" rows={4} placeholder="Describe the bag..." />
+                <textarea value={form.description} onChange={e => set('description', e.target.value)} className="input-field resize-none" rows={4} placeholder="Describe the piece..." />
                 {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
               </div>
 
@@ -113,7 +124,7 @@ export default function AddProduct() {
 
             {/* Photos */}
             <div className="card bg-white p-6">
-              <h2 className="font-display text-lg font-semibold text-ink mb-4">Photo URLs</h2>
+              <h2 className="font-display text-2xl font-medium text-ink mb-4">Photo URLs</h2>
               <p className="text-xs text-muted font-body mb-4">Add image URLs (Unsplash, Google Drive, etc). First photo is the main image.</p>
               <div className="space-y-3">
                 {form.photos.map((photo, i) => (
@@ -141,7 +152,7 @@ export default function AddProduct() {
               {form.photos[0] && (
                 <div className="mt-4">
                   <p className="text-xs text-muted font-body mb-2">Preview:</p>
-                  <img src={form.photos[0]} alt="Preview" className="w-32 h-32 object-cover rounded-sm bg-blush-light" onError={e => { e.target.style.display = 'none'; }} />
+                  <img src={form.photos[0]} alt="Preview" className="w-32 h-32 object-cover bg-blush-light" onError={e => { e.target.style.display = 'none'; }} />
                 </div>
               )}
             </div>
@@ -150,14 +161,41 @@ export default function AddProduct() {
           {/* Sidebar options */}
           <div className="space-y-6">
             <div className="card bg-white p-6 space-y-4">
-              <h2 className="font-display text-lg font-semibold text-ink">Category & Status</h2>
+              <h2 className="font-display text-2xl font-medium text-ink">Category & Status</h2>
 
               <div>
                 <label className="label">Category</label>
                 <select value={form.category} onChange={e => set('category', e.target.value)} className="input-field">
-                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  <optgroup label="Bags">
+                    {BAG_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </optgroup>
+                  <optgroup label="Clothes">
+                    {CLOTHING_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </optgroup>
                 </select>
               </div>
+
+              {isClothing && (
+                <div>
+                  <span className="label">Sizes Available</span>
+                  <div className="flex flex-wrap gap-2">
+                    {SIZE_OPTIONS.map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        className="size-chip"
+                        aria-pressed={form.sizes.includes(size)}
+                        onClick={() => toggleSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted font-body mt-2">
+                    Customers choose one of these before adding to their bag. Leave all off for one-size pieces.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="label">Status</label>
@@ -170,7 +208,7 @@ export default function AddProduct() {
 
             <div className="flex flex-col gap-3">
               <button type="submit" className="btn-primary w-full">Save Product</button>
-              <Link to="/admin/products" className="btn-secondary w-full text-center">Cancel</Link>
+              <Link to="/admin/products" className="btn-secondary w-full">Cancel</Link>
             </div>
           </div>
         </div>

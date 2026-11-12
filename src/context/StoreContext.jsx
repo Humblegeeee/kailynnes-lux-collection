@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import sampleProducts from '../data/sampleProducts';
+import sampleProducts, { SEED_VERSION } from '../data/sampleProducts';
 
 const StoreContext = createContext();
 
@@ -14,15 +14,25 @@ const ORDER_STATUSES = [
   'Cancelled',
 ];
 
+// Returning visitors keep their saved catalogue; sample products added in a
+// newer seed (e.g. the clothing range) are appended once, never duplicated.
+function loadProducts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('kailynnes_products') || 'null');
+    if (!Array.isArray(saved)) return sampleProducts;
+
+    const seeded = Number(localStorage.getItem('kailynnes_seed') || 1);
+    if (seeded >= SEED_VERSION) return saved;
+
+    const known = new Set(saved.map(p => p.id));
+    return [...saved, ...sampleProducts.filter(p => !known.has(p.id))];
+  } catch {
+    return sampleProducts;
+  }
+}
+
 export function StoreProvider({ children }) {
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('kailynnes_products');
-      return saved ? JSON.parse(saved) : sampleProducts;
-    } catch {
-      return sampleProducts;
-    }
-  });
+  const [products, setProducts] = useState(loadProducts);
 
   const [orders, setOrders] = useState(() => {
     try {
@@ -48,6 +58,7 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     localStorage.setItem('kailynnes_products', JSON.stringify(products));
+    localStorage.setItem('kailynnes_seed', String(SEED_VERSION));
   }, [products]);
 
   useEffect(() => {
@@ -100,12 +111,15 @@ export function StoreProvider({ children }) {
 
     setProducts(prev =>
       prev.map(p => {
-        const cartItem = cartItems.find(i => i.id === p.id);
-        if (!cartItem) return p;
+        // A product can appear on several lines (one per size).
+        const ordered = cartItems
+          .filter(i => i.id === p.id)
+          .reduce((sum, i) => sum + i.quantity, 0);
+        if (!ordered) return p;
 
         return {
           ...p,
-          quantityInStock: Math.max(0, p.quantityInStock - cartItem.quantity),
+          quantityInStock: Math.max(0, p.quantityInStock - ordered),
         };
       })
     );
@@ -153,6 +167,7 @@ export function StoreProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useStore() {
   return useContext(StoreContext);
 }

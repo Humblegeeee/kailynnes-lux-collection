@@ -27,8 +27,8 @@ export default function AdminSidebar({ onClose }) {
       {/* Header */}
       <div className="px-5 py-6 flex items-center justify-between border-b border-white/10">
         <div>
-          <span className="font-display text-lg font-bold text-white">Lumière</span>
-          <p className="text-[9px] font-body tracking-[0.25em] text-gold uppercase mt-0.5">Admin Panel</p>
+          <span className="font-display text-2xl font-medium text-ivory">Kailynne's</span>
+          <p className="text-[9px] font-body tracking-[0.3em] text-gold uppercase mt-0.5">Lux Collection · Admin</p>
         </div>
         {onClose && (
           <button onClick={onClose} className="text-stone-400 hover:text-white transition-colors lg:hidden">
